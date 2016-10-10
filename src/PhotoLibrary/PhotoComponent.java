@@ -141,6 +141,8 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
 				}
 				
 			}
+			
+			//text
 			ArrayList<DrawString> currentDrawStrings = (ArrayList<DrawString>)drawStrings.clone();
 			for(DrawString drawString: currentDrawStrings){
 				String text = drawString.getText();
