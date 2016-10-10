@@ -1,11 +1,14 @@
 package PhotoLibrary;
 
 import java.awt.event.ActionEvent;
+import java.io.File;
 
+import javax.activation.MimetypesFileTypeMap;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JScrollPane;
 
 public class MenuBar extends JMenuBar{
 
@@ -53,7 +56,10 @@ public class MenuBar extends JMenuBar{
 	
 	private void handleImportItem(ActionEvent event){
 		JFileChooser fileChooser = new JFileChooser();
-		fileChooser.showOpenDialog(null);
+		int returnValue = fileChooser.showOpenDialog(this);
+		if(returnValue == JFileChooser.APPROVE_OPTION){
+			photoLibrary.getMain().add( new JScrollPane( new PhotoComponent(fileChooser.getSelectedFile()), JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS ) );
+		}
 		photoLibrary.setStatusBar("Import item");
 	}
 
