@@ -1,5 +1,6 @@
 package PhotoLibrary;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 import java.util.ArrayList;
@@ -9,13 +10,19 @@ import javax.swing.JComponent;
 
 public class TextNode extends Node {
 	private String text = "";
+	private int lineHeight = 20;
+	private Graphics graphics;
 	
-	TextNode(int x, int y){
+	TextNode(Graphics g, int x, int y, Node parent){
+		super(parent);
 		this.getTransform().setToTranslation(x, y);
+		this.graphics = g;
 	}
-	TextNode(int x, int y, String text){
+	TextNode(Graphics g, int x, int y, String text, Node parent){
+		super(parent);
 		this.getTransform().setToTranslation(x, y);
 		this.text = text;
+		this.graphics = g;
 	}
 	
 	public void addText(char text){
@@ -31,17 +38,16 @@ public class TextNode extends Node {
 	}
 	
 	public int getX(){
-		return (int)this.getTransform().getTranslateX();
+		return (int)this.getFinalTransform().getTranslateX();
 	}
 	public int getY(){
-		return (int)this.getTransform().getTranslateY();
+		return (int)this.getFinalTransform().getTranslateY();
 	}
 	
 	@Override
 	public void paintLocal(JComponent component, Graphics graphics) {
-		// TODO Auto-generated method stub
 		String text = this.getText();
-		
+		graphics.setColor(Color.black);
 		if(graphics.getFontMetrics().stringWidth(text) < (int)component.getPreferredSize().getWidth() - this.getX()){
 			//string small enough to draw on the screen.
 			graphics.drawString(text, this.getX(), this.getY());
@@ -55,7 +61,11 @@ public class TextNode extends Node {
 						graphics.drawString(currentText, this.getX(), this.getY());
 						this.setText(currentText);
 						if(wordWrap) i++; // remove the space
-						getParent().addChild(new TextNode(this.getX(), this.getY() + 20, text.substring(i, text.length())));
+						TextNode newTextNode = new TextNode(this.graphics, this.getX(), this.getY() + lineHeight, text.substring(i, text.length()), this.getParent());
+						getParent().addChild(newTextNode);
+						if(component instanceof PhotoComponent){
+							((PhotoComponent)component).setCurrentTextNode(newTextNode);
+						}
 						break;
 					}
 				}
@@ -70,7 +80,6 @@ public class TextNode extends Node {
 	}
 	@Override
 	public Rectangle getBoundsLocal() {
-		// TODO Auto-generated method stub
-		return null;
+		return new Rectangle(this.getX(), this.getY(), this.getX() + this.graphics.getFontMetrics().stringWidth(text), this.getY() + lineHeight);
 	}
 }

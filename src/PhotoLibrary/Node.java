@@ -10,19 +10,22 @@ import javax.swing.JComponent;
 
 public abstract class Node {
 	private Node parent;
-	ArrayList<Node> children;
+	ArrayList<Node> children = new ArrayList<Node>();
 	
 	private Color fill, stroke;
 	
-	private AffineTransform transform;
+	private AffineTransform transform = new AffineTransform();
 	
 	boolean visible;
 	
-	public Node(){
-		
+	public Node(Node parent){
+		if(parent == null) return;
+		this.fill = parent.getFill();
+		this.stroke = parent.getStroke();
 	}
 	
 	public void addChild(Node node){
+		node.setParent(this);
 		children.add(node);
 	}
 	
@@ -30,11 +33,16 @@ public abstract class Node {
 		children.remove(node);
 	}
 	
+	public ArrayList<Node> getChildren(){
+		return children;
+	}
+	
 	public abstract void paintLocal(JComponent component, Graphics graphics);
 	
 	public void paint(JComponent component, Graphics graphics){
 		this.paintLocal(component, graphics);
-		for(Node child: children){
+		if(children == null) return;
+		for(Node child: (ArrayList<Node>) children.clone()){//loop through temporary clone in order to be able to change arraylist during paint
 			child.paint(component, graphics);
 		}
 	}
@@ -48,12 +56,14 @@ public abstract class Node {
 		childrenAndCurrent.add(this);
 		for(Node node: childrenAndCurrent){
 			Rectangle nodeBounds = node.getBounds();
-			if(minx > nodeBounds.x) minx = nodeBounds.x;
-			if(miny > nodeBounds.y) miny = nodeBounds.y;
-			if(maxx > nodeBounds.x + nodeBounds.width) maxx = nodeBounds.x + nodeBounds.width;
-			if(maxy > nodeBounds.y + nodeBounds.height) maxy = nodeBounds.y + nodeBounds.height;
+			if(nodeBounds!=null){
+				if(minx > nodeBounds.x) minx = nodeBounds.x;
+				if(miny > nodeBounds.y) miny = nodeBounds.y;
+				if(maxx > nodeBounds.x + nodeBounds.width) maxx = nodeBounds.x + nodeBounds.width;
+				if(maxy > nodeBounds.y + nodeBounds.height) maxy = nodeBounds.y + nodeBounds.height;
+			}
 		}
-		return null;
+		return new Rectangle(minx, miny, maxx, maxy);
 	}
 
 	public Color getFill() {
@@ -73,9 +83,13 @@ public abstract class Node {
 	}
 
 	public AffineTransform getFinalTransform() {
-		AffineTransform thisTransform = getParent().getFinalTransform();
-		thisTransform.concatenate(transform);
-		return thisTransform;
+		if(this.parent != null){
+			AffineTransform thisTransform = (AffineTransform)getParent().getFinalTransform().clone();
+			thisTransform.concatenate(this.transform);
+			return thisTransform;
+		} else {
+			return this.getTransform();
+		}
 	}
 	
 	public AffineTransform getTransform(){
