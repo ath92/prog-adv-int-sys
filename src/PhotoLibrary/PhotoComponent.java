@@ -15,6 +15,7 @@ import java.awt.geom.Line2D;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Random;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -29,10 +30,14 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
 	
 	ArrayList<ArrayList<Line2D.Float>> strokes = new ArrayList<ArrayList<Line2D.Float>>();
 	
-	SceneGraph sceneGraph = new SceneGraph();
+	ContainerNode sceneGraph = new ContainerNode(null);
 	
 	TextNode currentTextNode;
 	StrokeNode currentStrokeNode;
+	
+	Node picked = null;
+	
+	private boolean category1, category2;
 	
 	public PhotoComponent(File file){
 		super();
@@ -41,18 +46,20 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addKeyListener(this);
-		
+		Random rand = new Random();
+		//set pseudo-categories. Let's just have them both be mutually exclusive.
+		if(rand.nextInt()%2 == 0)category1 = true;
+		category2 = !category1;
 	}
 	
 
     public void mouseClicked(MouseEvent e) {
-    	if(e.getClickCount()==1 && flipped){
+    	if(e.getClickCount()==1 && flipped && picked == null){
     		//drawStrings.add(new DrawString(e.getX(), e.getY()));
-    		ContainerNode textBox = new ContainerNode(sceneGraph.getRootNode());
+    		ContainerNode textBox = new ContainerNode(sceneGraph);
     		currentTextNode = new TextNode(this.getGraphics(), e.getX(), e.getY(), textBox);
     		textBox.addChild(currentTextNode);
     		sceneGraph.addChild(textBox);
-    		
     	}
         if(e.getClickCount()==2){
             flipped = !flipped;
@@ -60,11 +67,12 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
     }
     
     public void mousePressed(MouseEvent e) {
+    	picked = sceneGraph.pick(e);
     	requestFocus();
-    	if(flipped){
+    	if(flipped && picked == null){
 	        oldX = e.getX();
 	        oldY = e.getY();
-	    	currentStrokeNode = new StrokeNode(sceneGraph.getRootNode(), oldX, oldY);
+	    	currentStrokeNode = new StrokeNode(sceneGraph, oldX, oldY);
 	    	currentStrokeNode.setStroke(Color.BLACK);
 	    	sceneGraph.addChild(currentStrokeNode);
     	}
@@ -79,12 +87,22 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
     	if(flipped){
 	        int currentX = e.getX();
 	        int currentY = e.getY();
-	        AffineTransform strokeTransform = currentStrokeNode.getTransform();
-	        currentStrokeNode.addLine(new LineNode(currentStrokeNode, 
-	        		oldX - (int)strokeTransform.getTranslateX(), 
-	        		oldY - (int)strokeTransform.getTranslateY(), 
-	        		currentX - (int)strokeTransform.getTranslateX(), 
-	        		currentY - (int)strokeTransform.getTranslateY()));
+	        
+	        if(picked!=null){
+	        	AffineTransform currentPosition = (AffineTransform)picked.getTransform().clone();
+	        	currentPosition.translate(currentX - oldX, currentY - oldY);
+	        	picked.setTransform(currentPosition);
+	        } else {
+		        AffineTransform strokeTransform = currentStrokeNode.getTransform();
+		        currentStrokeNode.addLine(new LineNode(currentStrokeNode, 
+		        		oldX - (int)strokeTransform.getTranslateX(), 
+		        		oldY - (int)strokeTransform.getTranslateY(), 
+		        		currentX - (int)strokeTransform.getTranslateX(), 
+		        		currentY - (int)strokeTransform.getTranslateY()));
+	        }
+	        
+	        
+	        
             oldX = currentX;
             oldY = currentY;
     	}
@@ -132,6 +150,10 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
 			System.out.println(e);
 		}
 	}
+	
+	public Image getPhoto(){
+		return photo;
+	}
 
 
 	@Override
@@ -167,6 +189,15 @@ public class PhotoComponent extends JComponent implements MouseListener, MouseMo
 	public void keyReleased(KeyEvent e) {
 		// TODO Auto-generated method stub
 		
+	}
+	
+	public boolean isCategory1(){
+		return category1;
+	}
+	
+
+	public boolean isCategory2(){
+		return category2;
 	}
 
 }

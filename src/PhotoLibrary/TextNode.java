@@ -17,6 +17,7 @@ public class TextNode extends Node {
 		super(parent);
 		this.getTransform().setToTranslation(x, y);
 		this.graphics = g;
+		this.setPickable(false);
 	}
 	TextNode(Graphics g, int x, int y, String text, Node parent){
 		super(parent);
@@ -80,6 +81,6 @@ public class TextNode extends Node {
 	}
 	@Override
 	public Rectangle getBoundsLocal() {
-		return new Rectangle(this.getX(), this.getY(), this.getX() + this.graphics.getFontMetrics().stringWidth(text), this.getY() + lineHeight);
+		return new Rectangle(this.getX(), this.getY() - lineHeight, this.graphics.getFontMetrics().stringWidth(text), lineHeight);
 	}
 }

@@ -2,13 +2,16 @@ package PhotoLibrary;
 
 import java.awt.event.ActionEvent;
 import java.io.File;
+import java.io.FileFilter;
 
 import javax.activation.MimetypesFileTypeMap;
+import javax.imageio.ImageIO;
 import javax.swing.JFileChooser;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JScrollPane;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class MenuBar extends JMenuBar{
 
@@ -55,31 +58,43 @@ public class MenuBar extends JMenuBar{
 	}
 	
 	private void handleImportItem(ActionEvent event){
+		FileNameExtensionFilter imageFilter = new FileNameExtensionFilter(
+			    "Image files", ImageIO.getReaderFileSuffixes());
 		JFileChooser fileChooser = new JFileChooser();
+		fileChooser.addChoosableFileFilter(imageFilter);
+		fileChooser.setAcceptAllFileFilterUsed(false);
 		int returnValue = fileChooser.showOpenDialog(this);
 		if(returnValue == JFileChooser.APPROVE_OPTION){
-			photoLibrary.getMain().add( new JScrollPane( new PhotoComponent(fileChooser.getSelectedFile()), JScrollPane.VERTICAL_SCROLLBAR_ALWAYS, JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS ) );
+			 PhotoComponent photo = new PhotoComponent(fileChooser.getSelectedFile());
+			 photoLibrary.addPhoto(photo);
+			 photoLibrary.switchToPhotoView(photoLibrary.getPhotos().size() - 1);
 		}
 		photoLibrary.setStatusBar("Import item");
 	}
 
 	private void handleDeleteItem(ActionEvent event){
+		photoLibrary.clear();
+		photoLibrary.removePhoto(photoLibrary.getCurrentPhotoId());
 		photoLibrary.setStatusBar("Delete item");
 	}
 
 	private void handleQuitItem(ActionEvent event){
+		System.exit(0);
 		photoLibrary.setStatusBar("Quit");
 	}
 
 	private void handlePhotoViewerItem(ActionEvent event){
+		photoLibrary.switchToPhotoView(photoLibrary.getCurrentPhotoId());
 		photoLibrary.setStatusBar("View Photo Viewer");
 	}
 	
 	private void handleBrowserItem(ActionEvent event){
+		photoLibrary.switchToBrowserView();
 		photoLibrary.setStatusBar("View Photo Browser");
 	}
 
 	private void handleSplitViewItem(ActionEvent event){
+		photoLibrary.switchToSplitView(photoLibrary.getCurrentPhotoId());
 		photoLibrary.setStatusBar("Split View");
 	}
 }
